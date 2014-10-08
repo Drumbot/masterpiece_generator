@@ -39,11 +39,11 @@ def model_trainer(corpus):
     return ngram_model
 
 
-def generate_masterpiece(modele):
+def generate_masterpiece(length, modele):
     masterpiece = []
     masterpiece += list(random.choice(modele.keys()))
 
-    while (len(masterpiece)) < 100:
+    while (len(masterpiece)) < length:
         context = masterpiece[-2:]
         candidats = [x for x in modele.keys() if x[0]+x[1] == context[0]+context[1]]
         r = random.uniform(0, 1)
@@ -63,32 +63,35 @@ def generate_masterpiece(modele):
 def arg_getter(argv):
     inputfile = ''
     outputfile = ''
+    length = 0
     try:
-        opts, arg = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+        opts, arg = getopt.getopt(argv, "hl:i:o:", ["length=", "ifile=", "ofile="])
     except getopt.GetoptError:
-        print 'masterpiece_generator.py -i <inputfile> -o <outputfile>'
+        print 'masterpiece_generator.py -l <length> -i <inputfile> -o <outputfile>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
             print 'masterpiece_generator.py -i <inputfile> -o <outputfile>'
             sys.exit()
+        elif opt in ('-l', '--length'):
+            length = int(arg)
         elif opt in ("-i", '--ifile'):
             inputfile = arg
         elif opt in ('-o', '--ofile'):
             outputfile = arg
 
-    return inputfile, outputfile
+    return length, inputfile, outputfile
 
 
 def main(argv):
-    inputfile, outputfile = arg_getter(argv)
+    length, inputfile, outputfile = arg_getter(argv)
     input_handle = codecs.open(inputfile, 'r', encoding='utf-8')
     raw_training_corpus = input_handle.read()
     input_handle.close()
 
-    split_training_corpus = re.split(r'\W+', raw_training_corpus)
+    split_training_corpus = re.split(r'\W+', raw_training_corpus.lower())
     ngram_model = model_trainer(split_training_corpus)
-    masterpiece = generate_masterpiece(ngram_model)
+    masterpiece = generate_masterpiece(length, ngram_model)
 
     output_handle = codecs.open(outputfile, 'w', encoding='utf-8')
     output_handle.write(' '.join(masterpiece))
